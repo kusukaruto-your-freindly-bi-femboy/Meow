@@ -1,5 +1,7 @@
 --[[ KUSU UI - Linoria Version (Master Loader) ]]--
 
+print("[KUSU] Master loader initializing...")
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -19,6 +21,8 @@ local GunMods      = loadstring(game:HttpGet(BASE_URL .. "gunmods.lua"))()
 local AimbotModule = loadstring(game:HttpGet(BASE_URL .. "aimbot.lua"))()
 local Overlay      = loadstring(game:HttpGet(BASE_URL .. "uioverlay.lua"))()
 local CompatWindow = loadstring(game:HttpGet(BASE_URL .. "compatwindow.lua"))()
+
+print("[KUSU] All modules fetched successfully.")
 
 -- Load Linoria Library
 local Library = loadstring(game:HttpGet(
@@ -43,7 +47,6 @@ local KeybindControls = {}
 local KeybindStates = {}
 local ColorPickerControls = {}
 
--- Instantiate the compatibility window wrapper
 local Window = CompatWindow.Make(
     LinoriaWindow, 
     ToggleControls, 
@@ -58,23 +61,34 @@ local Window = CompatWindow.Make(
 -- UI OVERLAY & SUBSYSTEM HOOKS
 --==================================================
 
--- Create FPS/Ping overlay window
 local keybindOverlay = Overlay.Create(Library, Config.Theme, Config.Theme.SchemeColor)
 
--- Initialize Aimbot systems
+print("[KUSU] Initializing Aimbot...")
 AimbotModule.Init(Config.Aimbot)
 
--- Apply Gun Mods listener loop
+-- Check gun mods folder
 local ammoTypesFolder = ReplicatedStorage:FindFirstChild("AmmoTypes")
 if ammoTypesFolder then
+    print("[KUSU] AmmoTypes folder found, applying gun mods...")
+    GunMods.Apply(Config.GunMods)
     Library:GiveSignal(ammoTypesFolder.ChildAdded:Connect(function()
         task.defer(function()
             GunMods.Apply(Config.GunMods)
         end)
     end))
+else
+    print("[KUSU] Note: AmmoTypes folder not found right now (will apply if it loads later).")
+    -- Fallback attempt in case it's named differently or loads slightly later
+    task.spawn(function()
+        local foundFolder = ReplicatedStorage:WaitForChild("AmmoTypes", 5)
+        if foundFolder then
+            print("[KUSU] AmmoTypes folder loaded late, applying gun mods now.")
+            GunMods.Apply(Config.GunMods)
+        end
+    end)
 end
 
--- Player ESP Events
+print("[KUSU] Setting up ESP for existing players...")
 for _, p in ipairs(Players:GetPlayers()) do
     if p ~= player then
         ESPModule.Create(p, Config)
@@ -91,24 +105,20 @@ Library:GiveSignal(Players.PlayerRemoving:Connect(function(p)
     ESPModule.Remove(p)
 end))
 
--- Flight character reset safety
 Library:GiveSignal(player.CharacterAdded:Connect(function()
     if Flight.Active then
         Flight:Stop()
     end
 end))
 
--- Main Render Loop (Updates ESP & Aimbot visual elements)
 Library:GiveSignal(RunService.RenderStepped:Connect(function()
-    -- Update Aimbot FOV
     AimbotModule.UpdateFOV(Config.Aimbot)
 end))
 
--- Cleanup on unload
 Library:OnUnload(function()
     Flight:Stop()
     ESPModule.ClearAll()
     GunMods.Restore()
 end)
 
-print("[KUSU] Master loader executed successfully!")
+print("[KUSU] UI and all subsystems loaded completely!")
