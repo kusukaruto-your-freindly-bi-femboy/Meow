@@ -9,17 +9,16 @@ local player = Players.LocalPlayer
 
 --==================================================
 -- LOAD MODULES FROM RAW URLS
--- (Replace the URLs below with your actual file hosting links)
 --==================================================
-local BASE_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/"
+local BASE_URL = "https://raw.githubusercontent.com/kusukaruto-your-freindly-bi-femboy/Meow/main/"
 
-local Config       = loadstring(game:HttpGet(BASE_URL .. "Config.lua"))()
-local Flight       = loadstring(game:HttpGet(BASE_URL .. "Flight.lua"))()
-local ESPModule    = loadstring(game:HttpGet(BASE_URL .. "ESP.lua"))()
-local GunMods      = loadstring(game:HttpGet(BASE_URL .. "GunMods.lua"))()
-local AimbotModule = loadstring(game:HttpGet(BASE_URL .. "Aimbot.lua"))()
-local Overlay      = loadstring(game:HttpGet(BASE_URL .. "UIOverlay.lua"))()
-local CompatWindow = loadstring(game:HttpGet(BASE_URL .. "CompatWindow.lua"))()
+local Config       = loadstring(game:HttpGet(BASE_URL .. "config.lua"))()
+local Flight       = loadstring(game:HttpGet(BASE_URL .. "flight.lua"))()
+local ESPModule    = loadstring(game:HttpGet(BASE_URL .. "esp.lua"))()
+local GunMods      = loadstring(game:HttpGet(BASE_URL .. "gunmods.lua"))()
+local AimbotModule = loadstring(game:HttpGet(BASE_URL .. "aimbot.lua"))()
+local Overlay      = loadstring(game:HttpGet(BASE_URL .. "uioverlay.lua"))()
+local CompatWindow = loadstring(game:HttpGet(BASE_URL .. "compatwindow.lua"))()
 
 -- Load Linoria Library
 local Library = loadstring(game:HttpGet(
