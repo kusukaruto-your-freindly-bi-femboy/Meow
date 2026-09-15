@@ -1,103 +1,70 @@
---[[ KUSU UI - Overlay & Utilities Module ]]--
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local Stats = game:GetService("Stats")
-local TeleportService = game:GetService("TeleportService")
-local UserInputService = game:GetService("UserInputService")
+--[[ KUSU UI - UI Overlay & Menu Builder ]]--
+local UIOverlay = {}
 
-local Overlay = {}
+function UIOverlay.Create(Window, Config, AimbotModule, ESPModule, GunMods, Flight, Players)
+    -- 1. Aimbot Tab
+    local aimbotTab = Window:NewTab("Aimbot")
+    local aimbotSection = aimbotTab:NewSection("Aimbot Settings", "Left")
+    
+    aimbotSection:NewToggle("Enable Aimbot", "Toggles the aimbot subsystem on/off", function(state)
+        Config.Aimbot.Enabled = state
+    end)
 
-function Overlay.Create(Library, theme, pink)
-    local keybindOverlay = Instance.new("Frame")
-    keybindOverlay.Name = "KusuKeybinds"
-    keybindOverlay.AnchorPoint = Vector2.new(1, 0)
-    keybindOverlay.Position = UDim2.new(1, -12, 0, 12)
-    keybindOverlay.Size = UDim2.fromOffset(220, 72)
-    keybindOverlay.BackgroundColor3 = theme.Background
-    keybindOverlay.BorderColor3 = pink
-    keybindOverlay.BorderSizePixel = 1
-    keybindOverlay.Visible = false
-    keybindOverlay.Parent = Library.ScreenGui
+    aimbotSection:NewToggle("Draw FOV Circle", "Displays the field of view circle", function(state)
+        Config.Aimbot.DrawFOV = state
+    end)
 
-    local keybindHeader = Instance.new("Frame")
-    keybindHeader.Active = true
-    keybindHeader.Size = UDim2.new(1, 0, 0, 25)
-    keybindHeader.BackgroundColor3 = theme.Header
-    keybindHeader.BorderSizePixel = 0
-    keybindHeader.Parent = keybindOverlay
+    aimbotSection:NewSlider("FOV Radius", "Sets the maximum targeting field of view", 300, 10, function(value)
+        Config.Aimbot.FOV = value
+    end, Config.Aimbot.FOV)
 
-    local fpsLabel = Instance.new("TextLabel")
-    fpsLabel.Position = UDim2.fromOffset(8, 0)
-    fpsLabel.Size = UDim2.new(0.5, -8, 1, 0)
-    fpsLabel.BackgroundTransparency = 1
-    fpsLabel.Text = "FPS: --"
-    fpsLabel.TextColor3 = theme.TextColor
-    fpsLabel.TextSize = 13
-    fpsLabel.Font = Enum.Font.Code
-    fpsLabel.TextXAlignment = Enum.TextXAlignment.Left
-    fpsLabel.Parent = keybindHeader
+    -- 2. ESP Tab
+    local espTab = Window:NewTab("ESP")
+    local espSection = espTab:NewSection("Visuals", "Left")
 
-    local pingLabel = fpsLabel:Clone()
-    pingLabel.Position = UDim2.new(0.5, 0, 0, 0)
-    pingLabel.Size = UDim2.new(0.5, -8, 1, 0)
-    pingLabel.Text = "Ping: --"
-    pingLabel.TextXAlignment = Enum.TextXAlignment.Right
-    pingLabel.Parent = keybindHeader
+    espSection:NewToggle("Enable ESP", "Toggles player box and info displays", function(state)
+        Config.ESP.Enabled = state
+    end)
 
-    -- Dragging Logic
-    local dragging, dragInput, dragStart, startPosition
-    keybindHeader.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPosition = keybindOverlay.Position
+    espSection:NewToggle("Name ESP", "Displays player usernames above heads", function(state)
+        Config.ESP.Names = state
+    end)
+
+    espSection:NewToggle("Box ESP", "Draws bounding boxes around players", function(state)
+        Config.ESP.Boxes = state
+    end)
+
+    -- 3. Gun Mods Tab
+    local gunTab = Window:NewTab("Gun Mods")
+    local gunSection = gunTab:NewSection("Weapon Modifications", "Left")
+
+    gunSection:NewToggle("No Recoil", "Removes weapon recoil completely", function(state)
+        Config.GunMods.NoRecoil = state
+        GunMods.Apply(Config.GunMods)
+    end)
+
+    gunSection:NewToggle("Infinite Ammo", "Prevents weapon magazine from depleting", function(state)
+        Config.GunMods.InfiniteAmmo = state
+        GunMods.Apply(Config.GunMods)
+    end)
+
+    -- 4. Movement Tab (Flight)
+    local moveTab = Window:NewTab("Movement")
+    local moveSection = moveTab:NewSection("Flight Controls", "Left")
+
+    moveSection:NewToggle("Enable Flight", "Toggles custom flight mode", function(state)
+        if state then
+            Flight:Start(Config.Flight)
+        else
+            Flight:Stop()
         end
     end)
 
-    keybindHeader.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
-    end)
+    moveSection:NewSlider("Flight Speed", "Adjusts your movement speed while flying", 200, 16, function(value)
+        Config.Flight.Speed = value
+    end, Config.Flight.Speed)
 
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input == dragInput then
-            local delta = input.Position - dragStart
-            keybindOverlay.Position = UDim2.new(
-                startPosition.X.Scale, startPosition.X.Offset + delta.X,
-                startPosition.Y.Scale, startPosition.Y.Offset + delta.Y
-            )
-        end
-    end)
-
-    -- FPS/Ping loop
-    local frameCount, frameTimer, statsTimer = 0, 0, 0
-    RunService.RenderStepped:Connect(function(deltaTime)
-        frameCount += 1
-        frameTimer += deltaTime
-        statsTimer += deltaTime
-
-        if frameTimer >= 0.5 then
-            fpsLabel.Text = string.format("FPS: %d", math.floor(frameCount / frameTimer + 0.5))
-            frameCount, frameTimer = 0, 0
-        end
-
-        if statsTimer >= 1 then
-            local ping = "--"
-            pcall(function() ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString() end)
-            pingLabel.Text = "Ping: " .. ping
-            statsTimer = 0
-        end
-    end)
-
-    return keybindOverlay
+    print("[KUSU] UI overlay tabs and controls constructed successfully!")
 end
 
-function Overlay.Rejoin()
-    local player = Players.LocalPlayer
-    if player then
-        pcall(function()
-            TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, player)
-        end)
-    end
-end
-
-return Overlay
+return UIOverlay
