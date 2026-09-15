@@ -61,7 +61,8 @@ local Window = CompatWindow.Make(
 -- UI OVERLAY & SUBSYSTEM HOOKS
 --==================================================
 
-local keybindOverlay = Overlay.Create(Library, Config.Theme, Config.Theme.SchemeColor)
+-- Build UI tabs and elements
+Overlay.Create(Window, Config, AimbotModule, ESPModule, GunMods, Flight, Players)
 
 print("[KUSU] Initializing Aimbot...")
 AimbotModule.Init(Config.Aimbot)
@@ -78,7 +79,6 @@ if ammoTypesFolder then
     end))
 else
     print("[KUSU] Note: AmmoTypes folder not found right now (will apply if it loads later).")
-    -- Fallback attempt in case it's named differently or loads slightly later
     task.spawn(function()
         local foundFolder = ReplicatedStorage:WaitForChild("AmmoTypes", 5)
         if foundFolder then
